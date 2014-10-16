@@ -9,6 +9,7 @@ import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.ListView;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -339,6 +340,10 @@ public class XFPanelView extends ListView {
         return Collections.emptyList();
     }
 
+    public static List<Job> getAllJobs() {
+        return Jenkins.getInstance().getAllItems(Job.class);
+    }
+
     public Collection<Job<?, ?>> getPrioritySortedJobs(Collection<Job<?, ?>> jobs) {
         if (jobs != null) {
             List<Job<?, ?>> sortedJobs = new ArrayList<Job<?, ?>>();
@@ -349,8 +354,8 @@ public class XFPanelView extends ListView {
 
                 // Set elements
                 for (Job<?, ?> job: jobs) {
-                    if (priorityPerJob.containsKey(job.getName())) {
-                        priority = priorityPerJob.get(job.getName());
+                    if (priorityPerJob.containsKey(job.getFullName())) {
+                        priority = priorityPerJob.get(job.getFullName());
                         jobMap.put(priority, job);
                         added++;
                     } else {
@@ -442,8 +447,9 @@ public class XFPanelView extends ListView {
         // Addition: Get priority of every job
         int priority = 0;
         this.priorityPerJob.clear();
-        for (hudson.model.Item i : Hudson.getInstance().getItems()) {
+        for (hudson.model.Item i : Jenkins.getInstance().getAllItems(Job.class)) {
             String itemName = i.getName();
+            String itemFullName = i.getFullName();
             if (itemName != null) {
                 String paramName = itemName + "_priority";
                 try {
@@ -458,7 +464,7 @@ public class XFPanelView extends ListView {
                 } catch (Exception e) {
                     priority++;
                 }
-                this.priorityPerJob.put(itemName, priority);
+                this.priorityPerJob.put(itemFullName, priority);
             } else {
                 throw new FormException("Couldn't read jobs from the config file. Generate a new config-file: jenkins_job_url/configure", "");
             }
